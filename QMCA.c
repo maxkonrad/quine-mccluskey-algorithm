@@ -7,6 +7,12 @@ typedef struct Terms {
     int hamming_weight;
 } Term;
 
+typedef struct Groups{
+    int weight;
+    int minterms[];
+    unsigned int common;
+} Group;
+
 void bubble_sort(Term[], int size);
 void take_terms(Term[], int *);
 void check_conflict(Term[], int, Term[], int);
@@ -20,6 +26,7 @@ int main(int argc, char const *argv[])
     struct Terms dont_cares[256];
     int num_dont_cares = 0;
     int i;
+    struct Terms PIs[256];
 
     printf("Please insert minterms seperated by space (e.g., 3 5 7):");
     take_terms(minterms, &num_minterms);
@@ -34,6 +41,8 @@ int main(int argc, char const *argv[])
 
     calc_hamming_weight(minterms, num_minterms);
     calc_hamming_weight(dont_cares, num_dont_cares);
+    
+    
 
     return 0;
 }
