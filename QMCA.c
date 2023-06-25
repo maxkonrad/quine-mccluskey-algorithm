@@ -3,7 +3,6 @@
 
 typedef struct Terms {
     int term;
-    int is_combined;
     int hamming_weight;
 } Term;
 
@@ -11,19 +10,22 @@ typedef struct Implicants {
     struct Terms terms[256];
     unsigned int common_bit_num;
     int size;
+    int is_combined;
+    int is_full_dont_care;
 } Implicant;
 
 typedef struct Groups{
     int weight;
-    struct implicants [256];
+    struct Implicants implicants[256];
     int size;
+    int is_empty;
 } Group;
 
 void bubble_sort(Term[], int size);
 void take_terms(Term[], int *);
 void check_conflict(Term[], int, Term[], int);
 void calc_hamming_weight(Term[], int);
-void calc_PIs(Term[], Term[], Term[], Term[]);
+void calc_PIs(Group[], Implicant[], Implicant[], Term[], Term[]);
 
 
 int main(int argc, char const *argv[])
@@ -34,11 +36,11 @@ int main(int argc, char const *argv[])
     int num_dont_cares = 0;
     int i;
     
-    struct Implicants implicants[256];
+    struct Implicants implicants[512];
     struct Implicants prime_implicants[256];
     struct Implicants essential_prime_implicants[256];
 
-    struct Group groups[8];
+    struct Group groups[256];
 
     printf("Please insert minterms seperated by space (e.g., 3 5 7):");
     take_terms(minterms, &num_minterms);
@@ -48,15 +50,10 @@ int main(int argc, char const *argv[])
     check_conflict(minterms, num_minterms, dont_cares, num_dont_cares);//checks if there is a conflict between don't care conditions and minterms & if there is no minterm entered.
     minterms[num_minterms];
     dont_cares[num_dont_cares];
-    bubble_sort(minterms, num_minterms);
-    bubble_sort(dont_cares, num_dont_cares);
-
     calc_hamming_weight(minterms, num_minterms);
     calc_hamming_weight(dont_cares, num_dont_cares);
 
-
-
-    calc_PIs(implicants, prime_implicants, minterms, dont_cares);
+    calc_PIs(groups, implicants, prime_implicants, minterms, dont_cares);
     
 
     return 0;
@@ -121,5 +118,41 @@ void calc_hamming_weight(Term arr[], int n){
     }
 }
 
-void calc_PIs(Group groups[], )
+void calc_PIs(Group groups[], Implicant implicants[], Implicant prime_implicants[], Term minterms[], Term dont_cares[]){
+    int i, j, k;
+    int num_minterms = sizeof(minterms) / sizeof(minterms[0]);
+    int num_dont_cares = sizeof(dont_cares) / sizeof(dont_cares[0]);
+    int i_implicants;
+    int i_groups;
+    for (i = 0; i < num_minterms; i++){
+        implicants[i].size = 1;
+        implicants[i].common_bit_num = 0;
+        implicants[i].terms[0] = minterms[i];
+        implicants[i].is_combined = 0;
+        implicants[i].is_full_dont_care = 0;
+    }
+
+    for (i = 0; i < num_dont_cares; i++){
+        implicants[i + num_minterms].size = 1;
+        implicants[i + num_minterms].common_bit_num = 0;
+        implicants[i + num_minterms].terms[0] = dont_cares[i];
+        implicants[i + num_minterms].is_combined = 0;
+        implicants[i + num_minterms].is_full_dont_care = 1;
+    }
+
+    i_implicants = num_dont_cares + num_minterms;
+
+    for (i = 0; i < 256; i++){
+        groups[i].weight = i;
+        for(j = 0; j < i_implicants; j++){
+            k = 0;
+            if(implicants[j].size == i){
+                groups[i].is_empty = 0;
+                groups[i].implicants[k++] = implicants[j];
+            } else {
+                groups[i].is_empty = 1;
+            }
+        }
+    }
+}
 
