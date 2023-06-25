@@ -27,7 +27,9 @@ int main(int argc, char const *argv[])
     struct Terms dont_cares[256];
     int num_dont_cares = 0;
     int i;
-    struct Terms PIs[256];
+    struct Groups prime_implicants[256];
+    struct Groups implicants[256];
+    struct Groups essential_prime_implicants[256];
 
     printf("Please insert minterms seperated by space (e.g., 3 5 7):");
     take_terms(minterms, &num_minterms);
