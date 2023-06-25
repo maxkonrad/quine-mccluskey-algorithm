@@ -25,7 +25,7 @@ void bubble_sort(Term[], int size);
 void take_terms(Term[], int *);
 void check_conflict(Term[], int, Term[], int);
 void calc_hamming_weight(Term[], int);
-void calc_PIs(Group[], Implicant[], Implicant[], Term[], Term[]);
+void calc_PIs(Group[], Implicant[], Implicant[], Term[], Term[], int, int);
 
 
 int main(int argc, char const *argv[])
@@ -40,20 +40,18 @@ int main(int argc, char const *argv[])
     struct Implicants prime_implicants[256];
     struct Implicants essential_prime_implicants[256];
 
-    struct Group groups[256];
+    struct Groups groups[256];
 
     printf("Please insert minterms seperated by space (e.g., 3 5 7):");
     take_terms(minterms, &num_minterms);
     printf("Please insert don't care conditions seperated by space (e.g., 3 5 7):");
     take_terms(dont_cares, &num_dont_cares);
-    
+        
     check_conflict(minterms, num_minterms, dont_cares, num_dont_cares);//checks if there is a conflict between don't care conditions and minterms & if there is no minterm entered.
-    minterms[num_minterms];
-    dont_cares[num_dont_cares];
     calc_hamming_weight(minterms, num_minterms);
     calc_hamming_weight(dont_cares, num_dont_cares);
 
-    calc_PIs(groups, implicants, prime_implicants, minterms, dont_cares);
+    calc_PIs(groups, implicants, prime_implicants, minterms, dont_cares, num_minterms, num_dont_cares);
     
 
     return 0;
@@ -65,7 +63,7 @@ void take_terms(Term terms[], int *num_terms){
     fgets(input, 256, stdin);
     char* token = input;
     while (sscanf(token, "%d", &term) == 1){
-        terms[(*num_terms)++].term = term;
+        terms[++(*num_terms)].term = term;
 
         token = strchr(token, ' ');
         if (token == NULL){
@@ -118,10 +116,8 @@ void calc_hamming_weight(Term arr[], int n){
     }
 }
 
-void calc_PIs(Group groups[], Implicant implicants[], Implicant prime_implicants[], Term minterms[], Term dont_cares[]){
+void calc_PIs(Group groups[], Implicant implicants[], Implicant prime_implicants[], Term minterms[], Term dont_cares[], int num_minterms, int num_dont_cares){
     int i, j, k;
-    int num_minterms = sizeof(minterms) / sizeof(minterms[0]);
-    int num_dont_cares = sizeof(dont_cares) / sizeof(dont_cares[0]);
     int i_implicants;
     int i_groups;
     for (i = 0; i < num_minterms; i++){
