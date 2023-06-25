@@ -7,17 +7,23 @@ typedef struct Terms {
     int hamming_weight;
 } Term;
 
+typedef struct Implicants {
+    struct Terms terms[256];
+    unsigned int common_bit_num;
+    int size;
+} Implicant;
+
 typedef struct Groups{
     int weight;
-    int minterms[];
-    unsigned int common;
-    int is_combined
+    struct implicants [256];
+    int size;
 } Group;
 
 void bubble_sort(Term[], int size);
 void take_terms(Term[], int *);
 void check_conflict(Term[], int, Term[], int);
 void calc_hamming_weight(Term[], int);
+void calc_PIs(Term[], Term[], Term[], Term[]);
 
 
 int main(int argc, char const *argv[])
@@ -27,9 +33,12 @@ int main(int argc, char const *argv[])
     struct Terms dont_cares[256];
     int num_dont_cares = 0;
     int i;
-    struct Groups prime_implicants[256];
-    struct Groups implicants[256];
-    struct Groups essential_prime_implicants[256];
+    
+    struct Implicants implicants[256];
+    struct Implicants prime_implicants[256];
+    struct Implicants essential_prime_implicants[256];
+
+    struct Group groups[8];
 
     printf("Please insert minterms seperated by space (e.g., 3 5 7):");
     take_terms(minterms, &num_minterms);
@@ -44,8 +53,11 @@ int main(int argc, char const *argv[])
 
     calc_hamming_weight(minterms, num_minterms);
     calc_hamming_weight(dont_cares, num_dont_cares);
-    
 
+
+
+    calc_PIs(implicants, prime_implicants, minterms, dont_cares);
+    
 
     return 0;
 }
@@ -108,3 +120,6 @@ void calc_hamming_weight(Term arr[], int n){
         arr[i].hamming_weight = count;
     }
 }
+
+void calc_PIs(Group groups[], )
+
