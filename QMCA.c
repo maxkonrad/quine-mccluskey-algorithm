@@ -3,7 +3,7 @@
 
 typedef struct Terms {
     int term;
-    int combined;
+    int is_combined;
     int hamming_weight;
 } Term;
 
@@ -11,6 +11,7 @@ typedef struct Groups{
     int weight;
     int minterms[];
     unsigned int common;
+    int is_combined
 } Group;
 
 void bubble_sort(Term[], int size);
@@ -42,7 +43,7 @@ int main(int argc, char const *argv[])
     calc_hamming_weight(minterms, num_minterms);
     calc_hamming_weight(dont_cares, num_dont_cares);
     
-    
+
 
     return 0;
 }
