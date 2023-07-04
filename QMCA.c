@@ -1,57 +1,50 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 typedef struct Terms {
-    int term;
+    unsigned int term;
     int hamming_weight;
+    int is_used;
 } Term;
 
-typedef struct Implicants {
-    struct Terms terms[256];
-    unsigned int common_bit_num;
-    int size;
-    int is_combined;
-    int is_full_dont_care;
+typedef struct Implicants{
+    Term minterm;
+    int is_prime;
+    unsigned int pass_digit;
 } Implicant;
 
 typedef struct Groups{
     int weight;
-    struct Implicants implicants[256];
-    int size;
-    int is_empty;
+    int id;
+    int size_id;
+    int num_implicants;
+    Implicant implicants[128];
 } Group;
 
-void bubble_sort(Term[], int size);
 void take_terms(Term[], int *);
-void check_conflict(Term[], int, Term[], int);
-void calc_hamming_weight(Term[], int);
-void calc_PIs(Group[], Implicant[], Implicant[], Term[], Term[], int, int);
+void check_conflict(Term[], int);
+void init_groups(Group[]);
+int hamming_weight(unsigned int);
+void calc_PIs(Group[], Term[], int);
+int calc_available(Implicant, Implicant, int*);
 
 
 int main(int argc, char const *argv[])
 {
-    struct Terms minterms[256];
+    struct Terms minterms[128];
     int num_minterms = 0;
-    struct Terms dont_cares[256];
-    int num_dont_cares = 0;
     int i;
-    
-    struct Implicants implicants[512];
-    struct Implicants prime_implicants[256];
-    struct Implicants essential_prime_implicants[256];
 
-    struct Groups groups[256];
+    struct Groups groups[30];
 
     printf("Please insert minterms seperated by space (e.g., 3 5 7):");
     take_terms(minterms, &num_minterms);
-    printf("Please insert don't care conditions seperated by space (e.g., 3 5 7):");
-    take_terms(dont_cares, &num_dont_cares);
-        
-    check_conflict(minterms, num_minterms, dont_cares, num_dont_cares);//checks if there is a conflict between don't care conditions and minterms & if there is no minterm entered.
-    calc_hamming_weight(minterms, num_minterms);
-    calc_hamming_weight(dont_cares, num_dont_cares);
 
-    calc_PIs(groups, implicants, prime_implicants, minterms, dont_cares, num_minterms, num_dont_cares);
+    check_conflict(minterms, num_minterms);//checks if there is no minterm entered.
+    init_groups(groups);
+
+    calc_PIs(groups, minterms, num_minterms);
     
 
     return 0;
@@ -63,7 +56,7 @@ void take_terms(Term terms[], int *num_terms){
     fgets(input, 256, stdin);
     char* token = input;
     while (sscanf(token, "%d", &term) == 1){
-        terms[++(*num_terms)].term = term;
+        terms[(*num_terms)++].term = term;
 
         token = strchr(token, ' ');
         if (token == NULL){
@@ -73,82 +66,83 @@ void take_terms(Term terms[], int *num_terms){
     }
 }
 
-void check_conflict(Term minterms[], int num_minterms, Term dont_cares[], int num_dont_cares){
+void check_conflict(Term minterms[], int num_minterms){
     int i = 0, j = 0;
     if(num_minterms == 0){
         printf("There must be minterms for this algorithm to work.");
+        return;
     }
-    for (; i < num_minterms; i++){
-        for (; j < num_dont_cares; j++){
-            if (minterms[i].term == dont_cares[j].term){
-                printf("There is a conflict between minterms and don't care conditions, plaese check your input.");
-                return;
+}
+
+void init_groups(Group groups[]){
+    int i, j, k = 7, t = 1;
+
+    for (i = 0, j = 0; i < 36; i++){
+        groups[i].id = i;
+        groups[i].weight = j;
+        groups[i].size_id = t;
+        if (j == k){
+            k--;
+            j = 0;
+            t++;
+        } else {
+            j++;
+        }
+    }
+}
+
+void calc_PIs(Group groups[], Term minterms[], int num_minterms){
+    
+    int i, j, k, u, size, t;
+    for (i = 0; i < 8; i++){
+        k = 0;
+        for (j = 0; j < num_minterms; j++){
+            if (hamming_weight(minterms[j].term) == groups[i].weight){
+                groups[i].implicants[k].pass_digit = 0;
+                groups[i].implicants[k++].minterm = minterms[j];
+            }
+        }
+        groups[i].num_implicants = k;
+    }
+
+    for (i = 0; i < 30; i++){
+        if (groups[i].num_implicants == 0) continue;
+        for(j = 0; j < groups[i].num_implicants; j++){
+            u = 0;
+            for (k = 0; k < groups[i+1].num_implicants; k++){
+                if(calc_available(groups[i].implicants[j], groups[i+1].implicants[k], &u)){
+                    size = pow(2, groups[i].size_id - 1);
+                    groups[size + u].implicants[]
+                }
             }
         }
     }
+
 }
 
-void bubble_sort(Term arr[], int size){
-	int i, j, temp;
-	for(i = 0; i < size - 1; i++){
-		for(j = i + 1; j < size; j++){
-			if(arr[j].term < arr[i].term){
-				temp = arr[i].term;
-				arr[i].term = arr[j].term;
-				arr[j].term = temp;
-			}
-		}
-	}
+int hamming_weight(unsigned int n) {
+    int r = n ? 1 : 0;
+    while (n &= (n - 1)) ++ r;
+    return r;
 }
 
-
-void calc_hamming_weight(Term arr[], int n){
-    int i = 0, j = 0;
-    for (; i < n; i++){
-        unsigned int num = (unsigned int) arr[i].term;
-        int count = 0;
-        while (num > 0){
-            if (num & 1)
-                count++;
-            num >>= 1;
-        }
-        arr[i].hamming_weight = count;
-    }
-}
-
-void calc_PIs(Group groups[], Implicant implicants[], Implicant prime_implicants[], Term minterms[], Term dont_cares[], int num_minterms, int num_dont_cares){
-    int i, j, k;
-    int i_implicants;
-    int i_groups;
-    for (i = 0; i < num_minterms; i++){
-        implicants[i].size = 1;
-        implicants[i].common_bit_num = 0;
-        implicants[i].terms[0] = minterms[i];
-        implicants[i].is_combined = 0;
-        implicants[i].is_full_dont_care = 0;
-    }
-
-    for (i = 0; i < num_dont_cares; i++){
-        implicants[i + num_minterms].size = 1;
-        implicants[i + num_minterms].common_bit_num = 0;
-        implicants[i + num_minterms].terms[0] = dont_cares[i];
-        implicants[i + num_minterms].is_combined = 0;
-        implicants[i + num_minterms].is_full_dont_care = 1;
-    }
-
-    i_implicants = num_dont_cares + num_minterms;
-
-    for (i = 0; i < 256; i++){
-        groups[i].weight = i;
-        for(j = 0; j < i_implicants; j++){
-            k = 0;
-            if(implicants[j].size == i){
-                groups[i].is_empty = 0;
-                groups[i].implicants[k++] = implicants[j];
-            } else {
-                groups[i].is_empty = 1;
+int calc_available(Implicant prior, Implicant next, int *u){
+    unsigned int mask = 1;
+    int i, r = 0;
+    const int start_weight = hamming_weight(prior.minterm.term);
+    if(prior.pass_digit == next.pass_digit){
+        for(i = 0; i < 8; i++){
+            if((mask & prior.pass_digit) == 1){
+                mask = mask << 1;
+                continue;
             }
+            prior.minterm.term = prior.minterm.term | next.minterm.term;
+            if ((prior.minterm.term & mask) == 1) u++;
+            mask = mask << 1;
         }
+        if ((hamming_weight(prior.minterm.term) - start_weight) == 1) r = 1;
     }
+    return r;
 }
+
 
