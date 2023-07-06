@@ -5,7 +5,7 @@
 #define NUM_MINTERMS 16
 #define NUM_INPUTS 4
 #define NUM_GROUPS 5
-#define NUM_IMPLICANTS 120
+#define NUM_IMPLICANTS 120 //temporary, there is more than this needed actually
 
 typedef struct Terms {
     unsigned int term;
